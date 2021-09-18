@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"opentag/handlers"
+	"opentag/helpers"
 	"os"
 	"os/signal"
 	"time"
@@ -16,20 +18,20 @@ import (
 var Port string
 
 func main() {
-  if Port == "" {
-    Port = os.Args[2];
-  }
+	if Port == "" {
+		Port = os.Args[2]
+	}
 
 	logger := log.New(os.Stdout, "opentag-task ", log.LstdFlags)
-
+	codec := helpers.NewCodec()
 	serveMux := mux.NewRouter()
 
-	getRouter := serveMux.Methods(http.MethodGet).Subrouter()
+	th := handlers.NewTranslationHandler(logger, codec)
 
-	getRouter.HandleFunc("/hi", func(w http.ResponseWriter, r *http.Request) {
-    logger.Println("HI")
-		fmt.Fprintf(w, "Hello")
-	})
+	// getRouter := serveMux.Methods(http.MethodGet).Subrouter()
+	postRouter := serveMux.Methods(http.MethodPost).Subrouter()
+
+	postRouter.HandleFunc("/word", th.TranslateWord)
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%v", Port),
