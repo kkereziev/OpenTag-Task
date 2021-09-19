@@ -28,10 +28,15 @@ func main() {
 
 	th := handlers.NewTranslationHandler(logger, codec)
 
-	// getRouter := serveMux.Methods(http.MethodGet).Subrouter()
+	getRouter := serveMux.Methods(http.MethodGet).Subrouter()
 	postRouter := serveMux.Methods(http.MethodPost).Subrouter()
 
+	// GET
+	getRouter.HandleFunc("/history", th.GetHistory)
+
+	// POST
 	postRouter.HandleFunc("/word", th.TranslateWord)
+	postRouter.HandleFunc("/sentence", th.TranslateSentence)
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%v", Port),

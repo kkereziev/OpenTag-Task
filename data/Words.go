@@ -3,11 +3,13 @@ package data
 import "opentag/helpers"
 
 type English struct {
-	Word string `json:"english_word"`
+	Word     string `json:"english_word"`
+	Sentence string `json:"english_sentence"`
 }
 
 type Gopher struct {
-	Word string `json:"gopher_word"`
+	Word     string `json:"gopher_word,omitempty"`
+	Sentence string `json:"gopher_sentence,omitempty"`
 }
 
 func (e *English) DoesWordBeginWithVowel() bool {
@@ -33,8 +35,8 @@ func (e *English) DoesWordBeginWithConsonantSound(consonantCounter *int) bool {
 		*consonantCounter++
 
 		if word == 'q' && e.Word[i+1] == 'u' {
-		  *consonantCounter++
-      break;
+			*consonantCounter++
+			break
 		}
 	}
 
