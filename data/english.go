@@ -2,14 +2,14 @@ package data
 
 import "opentag/helpers"
 
+const (
+	QLetter = 'q'
+	ULetter = 'u'
+)
+
 type English struct {
 	Word     string `json:"english_word"`
 	Sentence string `json:"english_sentence"`
-}
-
-type Gopher struct {
-	Word     string `json:"gopher_word,omitempty"`
-	Sentence string `json:"gopher_sentence,omitempty"`
 }
 
 func (e *English) DoesWordBeginWithVowel() bool {
@@ -24,21 +24,21 @@ func (e *English) DoesWordBeginWithSequence(sequence string) bool {
 }
 
 func (e *English) DoesWordBeginWithConsonantSound(consonantCounter *int) bool {
-	flag := false
+	beginsWithConsonant := false
 
-	for i, word := range e.Word {
-		if helpers.BinarySearch(helpers.Vowels[:], word) {
+	for i, letter := range e.Word {
+		if helpers.BinarySearch(helpers.Vowels[:], letter) {
 			break
 		}
 
-		flag = true
+		beginsWithConsonant = true
 		*consonantCounter++
 
-		if word == 'q' && e.Word[i+1] == 'u' {
+		if letter == QLetter && e.Word[i+1] == ULetter {
 			*consonantCounter++
 			break
 		}
 	}
 
-	return flag
+	return beginsWithConsonant
 }

@@ -11,8 +11,8 @@ import (
 
 type History struct {
 	WordHistory     []map[string]string          `json:"history"`
-	EnglishWordKeys []string                     `json:"e,omitempty"`
-	Db              map[string]map[string]string `json:"b,omitempty"`
+	englishWordKeys []string                     `json:"-"`
+	db              map[string]map[string]string `json:"-"`
 }
 
 type TranslationHandler interface {
@@ -28,67 +28,69 @@ type translationHandler struct {
 }
 
 func NewTranslationHandler(logger *log.Logger, codec helpers.Codec) TranslationHandler {
-	return &translationHandler{logger, codec, &History{Db: map[string]map[string]string{}, EnglishWordKeys: []string{}, WordHistory: []map[string]string{}}}
+	return &translationHandler{logger, codec, &History{db: map[string]map[string]string{}, englishWordKeys: []string{}, WordHistory: []map[string]string{}}}
 }
 
+// GetHistory returns all english words and sentences and their coresponding gopher ones
 func (th *translationHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
-	a := &History{WordHistory: []map[string]string{}}
-	sort.Strings(th.history.EnglishWordKeys)
-	res := []map[string]string{}
-	for _, key := range th.history.EnglishWordKeys {
-		res = append(res, th.history.Db[key])
+	// All and all this part could have been done better
+	// with TreeMap but I decided to stick with this custom solution
+	sort.Strings(th.history.englishWordKeys)
+	resultArray := []map[string]string{}
+
+	for _, key := range th.history.englishWordKeys {
+		resultArray = append(resultArray, th.history.db[key])
 	}
 
-	a.WordHistory = res
-	th.codec.Encode(w, a)
+	th.history.WordHistory = resultArray
+	th.codec.Encode(w, th.history)
 }
 
+// TranslateWord translates english word into gopher one
 func (th *translationHandler) TranslateWord(w http.ResponseWriter, r *http.Request) {
-	englishWord := &data.English{}
+	english := &data.English{}
 
-	err := th.codec.Decode(r, englishWord)
+	err := th.codec.Decode(r, english)
 
 	if err != nil {
 		th.logger.Fatal(err)
 	}
 
-	gopherWord := th.translate(englishWord)
+	gopherWord := th.translate(english)
 
-	if len(th.history.Db[englishWord.Word]) == 0 {
-		th.history.EnglishWordKeys = append(th.history.EnglishWordKeys, englishWord.Word)
-		th.history.Db[englishWord.Word] = map[string]string{englishWord.Word: gopherWord}
+	if !th.doesKeyExistInDb(english.Word) {
+		th.pushKeyIntoDb(english.Word, gopherWord)
 	}
 
 	th.codec.Encode(w, &data.Gopher{Word: gopherWord})
 }
 
+// TranslateSentence translates english sentence into gopher one
 func (th *translationHandler) TranslateSentence(w http.ResponseWriter, r *http.Request) {
-	englishWord := &data.English{}
+	english := &data.English{}
 
-	err := th.codec.Decode(r, englishWord)
+	err := th.codec.Decode(r, english)
 
 	if err != nil {
 		th.logger.Fatal(err)
 	}
 
-	regex := regexp.MustCompile(`[a-z]+`)
-	words := regex.FindAllString(englishWord.Sentence, -1)
 	var gopherSentence string
-	lastIndex := len(englishWord.Sentence) - 1
-	sign := englishWord.Sentence[lastIndex]
-
+	regex := regexp.MustCompile(`[a-z]+`)
+	words := regex.FindAllString(english.Sentence, -1)
+	
 	for _, word := range words {
-		englishWord.Word = word
-		gopherWord := th.translate(englishWord)
-		gopherSentence += gopherWord + " "
+		english.Word = word
+		gopherWord := th.translate(english)
+		gopherSentence += gopherWord + helpers.EmptySpace
 	}
+	
+	lastIndex := len(english.Sentence) - 1
+	sentenceSign := english.Sentence[lastIndex]
+	gopherSentence = gopherSentence[:lastIndex] + string(sentenceSign)
 
-	lastIndex = len(gopherSentence) - 1
-
-	gopherSentence = gopherSentence[:lastIndex] + string(sign)
-	if len(th.history.Db[englishWord.Word]) == 0 {
-		th.history.EnglishWordKeys = append(th.history.EnglishWordKeys, englishWord.Sentence)
-		th.history.Db[englishWord.Sentence] = map[string]string{englishWord.Sentence: gopherSentence}
+	if !th.doesKeyExistInDb(english.Sentence) {
+		th.pushKeyIntoDb(english.Sentence, gopherSentence)
 	}
 
 	th.codec.Encode(w, &data.Gopher{Sentence: gopherSentence})
@@ -110,4 +112,13 @@ func (th *translationHandler) translate(word *data.English) string {
 	}
 
 	return gopherWord
+}
+
+func (th *translationHandler) doesKeyExistInDb(key string) bool {
+	return len(th.history.db[key]) != 0
+}
+
+func (th *translationHandler) pushKeyIntoDb(key string, value string) {
+	th.history.englishWordKeys = append(th.history.englishWordKeys, key)
+	th.history.db[key] = map[string]string{key: value}
 }

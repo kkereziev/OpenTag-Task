@@ -6,4 +6,5 @@ const (
 	VowelLetterPrefix        = "g"
 	ConsonantLettersXrPrefix = "ge"
 	ConsonantSoundSuffix     = "ogo"
+	EmptySpace               = " "
 )

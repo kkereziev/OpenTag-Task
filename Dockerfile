@@ -6,9 +6,10 @@ ARG PORT
 
 WORKDIR /app
 
-RUN go mod download\
+RUN go mod download \
     && go build -o server -ldflags "-X main.Port=${PORT}"
 
 EXPOSE ${PORT}
 
 CMD ["./server"]
+
