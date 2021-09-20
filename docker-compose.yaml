@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args: 
-        PORT: ${PORT}
+        PORT: ${CONTAINERPORT}
     container_name: opentag
     ports:
-      - '${PORT}:${PORT}'
+      - '${PORT}:${CONTAINERPORT}'

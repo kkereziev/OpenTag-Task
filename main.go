@@ -18,6 +18,7 @@ import (
 var Port string
 
 func main() {
+	// this is done in case the server is runned locally, in such case port flag is required
 	if Port == "" {
 		Port = os.Args[2]
 	}
