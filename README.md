@@ -25,7 +25,7 @@ The history endpoint will provide the history of all request send to the server 
 The main idea of the deployment process is that the server is supposed to be run as docker container. For this purpose there are docker-compose file and Dockerfile are created. You can start the server via docker container with make compose command e.g. "make compose -port=3000". Now this command has another argument "containerport", which can be passed too. The difference between both flags is that "containerport" is used as container port, meaning the container will be exposed with the value provided in this flag in the internal docker network. The "port" is exposing the container port itself for the docker host. The default value for both flags in the Makefile is 8000.
 
 ### TL;DR
-You can start the server with "make compose", "make compose -port=**value**" and "make compose -port=**value** -containerport=**value**" where **value** is numeric value.
+You can start the server with "make compose", "make compose -port=**value**" and "make compose -port=**value** -containerport=**value**" where **value** is numeric value. You can then access the server with http://localhost:**value**
 
 ## Additional Info
 If you want you can start the server locally with command "make run -port=**value**", also you can run the tests with "make test". Go check the Makefile too see all available scripts.
